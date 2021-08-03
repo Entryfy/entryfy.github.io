@@ -9,7 +9,7 @@
       
       
       
-        <link rel="canonical" href="https://docs.entryfy.com/building/auth/">
+        <link rel="canonical" href="https://docs.entryfy.com/building/user/">
       
       
         
@@ -19,7 +19,7 @@
     
     
       
-        <title>Authentication - Entryfy - API Documentation</title>
+        <title>User - Entryfy - API Documentation</title>
       
     
     
@@ -69,7 +69,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#authentication" class="md-skip">
+        <a href="#user-handling" class="md-skip">
           Skip to content
         </a>
       
@@ -101,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Authentication
+              User
             
           </span>
         </div>
@@ -300,6 +300,20 @@
               
   
   
+  
+    <li class="md-nav__item">
+      <a href="../auth/" class="md-nav__link">
+        Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -312,12 +326,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Authentication
+          User
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Authentication
+        User
       </a>
       
         
@@ -335,22 +349,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#create-session" class="md-nav__link">
-    Create session
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#re-issue-session" class="md-nav__link">
-    Re-issue session
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#destroy-session" class="md-nav__link">
-    Destroy session
+  <a href="#create-a-user" class="md-nav__link">
+    Create a user
   </a>
   
 </li>
@@ -359,20 +359,6 @@
   
 </nav>
       
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../user/" class="md-nav__link">
-        User
-      </a>
     </li>
   
 
@@ -424,22 +410,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#create-session" class="md-nav__link">
-    Create session
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#re-issue-session" class="md-nav__link">
-    Re-issue session
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#destroy-session" class="md-nav__link">
-    Destroy session
+  <a href="#create-a-user" class="md-nav__link">
+    Create a user
   </a>
   
 </li>
@@ -456,77 +428,55 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/Entryfy/protobuffers/edit/master/docs/building/auth.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/Entryfy/protobuffers/edit/master/docs/building/user.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
                 
-                <h1 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">#</a></h1>
-<h2 id="create-session">Create session<a class="headerlink" href="#create-session" title="Permanent link">#</a></h2>
-<p>First step is creating a message, CreateSessionRequest, with username, password and a device UUID. </p>
-<p>The device_uuid is an identifier from which resource the request has been made. The device_uuid needs to be unique per user and resource.</p>
-<p>If the client authenticates with the same device_uuid from another resource all other sessions will be terminated.</p>
-<p><div class="highlight"><pre><span></span><code><span class="kd">message</span> <span class="nc">CreateSessionRequest</span> <span class="p">{</span>
-    <span class="kt">string</span> <span class="na">username</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">password</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">device_uuid</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-The message is sent to the SessionService to get back an authentication token that the client will use in subsequent requests and an reissue token that will be used to re-authentication as explained below. </p>
-<pre class="mermaid-experimental"><code>sequenceDiagram
-    participant Client
-    participant SessionsService
-    Client-&gt;&gt;SessionsService: CreateSessionRequest
-    SessionsService--&gt;&gt;Client: CreateSessionResponse</code></pre>
-<p>Store the tokens in some form of local cache so it is available to the client and don't re-authenticate on each request.</p>
-<div class="highlight"><pre><span></span><code><span class="kd">message</span> <span class="nc">CreateSessionResponse</span> <span class="p">{</span>
-    <span class="kt">string</span> <span class="na">auth_token</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">reissue_token</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-    <span class="kt">uint32</span> <span class="na">exp</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-    <span class="kt">uint64</span> <span class="na">user_id</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">username</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">user_uuid</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<h2 id="re-issue-session">Re-issue session<a class="headerlink" href="#re-issue-session" title="Permanent link">#</a></h2>
-<p>An authentication token (auth_token) is valid for 2 weeks and to extend the validity the client can send an request to reissue the token which extends it an additional two weeks. </p>
-<div class="highlight"><pre><span></span><code><span class="kd">message</span> <span class="nc">ReissueSessionRequest</span> <span class="p">{</span>
-    <span class="kt">string</span> <span class="na">reissue_token</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>To re-issue an authentication token you need to send an ReissueSessionRequest with the reissue token returned when the session was created. </p>
-<pre class="mermaid-experimental"><code>sequenceDiagram
-    participant Client
-    participant SessionsService
-    Client-&gt;&gt;SessionsService: ReissueSessionRequest
-    SessionsService--&gt;&gt;Client: ReissueSessionResponse</code></pre>
-<p>You will get back an ReissueSessionResponse with the extend auth_token and a new re-issue token if you need to extend the validity further.</p>
-<div class="highlight"><pre><span></span><code><span class="kd">message</span> <span class="nc">ReissueSessionResponse</span> <span class="p">{</span>
-    <span class="kt">string</span> <span class="na">auth_token</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">reissue_token</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-    <span class="kt">uint32</span> <span class="na">exp</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-    <span class="kt">uint64</span> <span class="na">user_id</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">username</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">user_uuid</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<h2 id="destroy-session">Destroy session<a class="headerlink" href="#destroy-session" title="Permanent link">#</a></h2>
-<p>To invalidate an authentication session send an empty DestroySessionRequest message to the SessionsService.</p>
-<pre class="mermaid-experimental"><code>sequenceDiagram
-    participant Client
-    participant SessionsService
-    Client-&gt;&gt;SessionsService: DestroySessionRequest
-    SessionsService--&gt;&gt;Client: DestroySessionResponse</code></pre>
-<div class="highlight"><pre><span></span><code><span class="kd">message</span> <span class="nc">DestroySessionRequest</span> <span class="p">{</span>
+                <h1 id="user-handling">User handling<a class="headerlink" href="#user-handling" title="Permanent link">#</a></h1>
+<h2 id="create-a-user">Create a user<a class="headerlink" href="#create-a-user" title="Permanent link">#</a></h2>
+<p>Second step is creating your first user(s). The minimum information required to create a user is an email address, first &amp; last name, role and if the user is enabled or disabled.</p>
+<p><div class="highlight"><pre><span></span><code><span class="kd">message</span> <span class="nc">CreateUsersRequest</span> <span class="p">{</span>
+  <span class="kd">message</span> <span class="nc">CreateKeyCard</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">uuid</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">value</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">nr</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// Mandatory</span>
+    <span class="kt">string</span> <span class="na">label</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+  <span class="p">}</span>
 
-<span class="p">}</span>
-</code></pre></div>
-<p>You will get back an empty DestroySessionResponse to confirm that the auth token has been invalidated.</p>
-<div class="highlight"><pre><span></span><code><span class="kd">message</span> <span class="nc">DestroySessionResponse</span> <span class="p">{</span>
+  <span class="kd">message</span> <span class="nc">CreateUser</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">uuid</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// Non-mandatory, UUID to assign to the user</span>
+    <span class="kt">string</span> <span class="na">email</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">first_name</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">last_name</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">password</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span> <span class="c1">// Non-mandatory, would be autogenerated if empty</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">roles</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span> <span class="c1">// Possible roles are: orgadmin, normal, operator, guest</span>
+    <span class="n">google.protobuf.Timestamp</span> <span class="na">valid_from</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span> <span class="c1">// Non-mandatory</span>
+    <span class="n">google.protobuf.Timestamp</span> <span class="na">valid_to</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">// Non-mandatory</span>
+    <span class="kt">bool</span> <span class="na">enabled</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">preferences</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>  <span class="c1">// Non-mandatory</span>
+    <span class="n">CreateKeyCard</span> <span class="na">key_card</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>  <span class="c1">// Non-mandatory</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">initial_access_uuids</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>  <span class="c1">// Non-mandatory</span>
+  <span class="p">}</span>
 
+  <span class="kt">string</span> <span class="na">organization_slug</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="k">repeated</span> <span class="n">CreateUser</span> <span class="na">users</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+  <span class="kt">bool</span> <span class="na">send_welcome_email</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// Non-mandatory</span>
 <span class="p">}</span>
 </code></pre></div>
+You can batch create users by sending multiple CreateUser messages in one CreateUsersRequest. The message is sent to the UsersService </p>
+<pre class="mermaid-experimental"><code>sequenceDiagram
+    participant Client
+    participant UsersService
+    Client-&gt;&gt;UsersService: CreateUsersRequest
+    UsersService--&gt;&gt;Client: CreateUsersResponse</code></pre>
+<p>In the response you will be given BizOperation UUID associated with the operation. Use this UUID when listening to the BizOperation stream or when polling the BizOperation endpoint to get status of the ongoing operation. </p>
+<div class="highlight"><pre><span></span><code><span class="kd">message</span> <span class="nc">CreateUsersResponse</span> <span class="p">{</span>
+  <span class="k">repeated</span> <span class="n">BizOperation</span> <span class="na">biz_operations</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>When the BizOperation has changed status to finished we can continue on to the next step and give our user the permissions they need.</p>
                 
               
               
@@ -547,7 +497,7 @@ The message is sent to the SessionService to get back an authentication token th
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../../getting-started/concepts/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Concepts" rel="prev">
+        <a href="../auth/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Authentication" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -556,20 +506,20 @@ The message is sent to the SessionService to get back an authentication token th
               <span class="md-footer__direction">
                 Previous
               </span>
-              Concepts
+              Authentication
             </div>
           </div>
         </a>
       
       
         
-        <a href="../user/" class="md-footer__link md-footer__link--next" aria-label="Next: User" rel="next">
+        <a href="../access/" class="md-footer__link md-footer__link--next" aria-label="Next: Access" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              User
+              Access
             </div>
           </div>
           <div class="md-footer__button md-icon">
